@@ -1,36 +1,36 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
-export default function ChatScreen({route}){
-    const {text, color} = route.params
+import {collection, query, addDoc, onSnapshot, orderBy} from "firebase/firestore"
+export default function ChatScreen({route, db}){
+    const {color, userID, name} = route.params
     const [messages, setMessages] = useState([])
+
     const onSend = (newMessages) => {
-        setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+        //store directly in fb
+        addDoc(collection(db, "messages"), newMessages[0])
     }
+    
     useEffect(() => {
-        setMessages([
-            {
-                _id: 1,
-                text: 'Hi nice to meet you',
-                createdAt: new Date(),
-                user: {
-                    _id: 2,
-                    name: "Computer",
-                    avatar: "https://placeimg.com/140/140/any"
-                }
-            },
-            {
-                _id: 2,
-                text: 'Here is my ip address',
-                createdAt: new Date(),
-                user: {
-                    _id: 2,
-                    name: "Computer",
-                    avatar: "https://placeimg.com/140/140/any"
-                }
+        //query your messages collection order by createdAt desc
+        const messageQuery = query(collection(db, "messages"), orderBy('createdAt', "desc"))
+        //defines a function to unsubcribe while getting the messages
+        const unSubMessages = onSnapshot(messageQuery, (docSnapshot) => {
+            let newMessages = []
+            docSnapshot.forEach(doc => {
+                newMessages.push({id: doc.id, ...doc.data(), createdAt: new Date(doc.data().createdAt.toMillis())})
+            });
+            setMessages(newMessages)
+        })
+
+        //clean up code
+        return () => {
+            if(unSubMessages){
+                unSubMessages()
             }
-        ])
+        }
     },[])
+
     return (
         <View style={[styles.container, {backgroundColor: color}]}>
             
@@ -38,7 +38,8 @@ export default function ChatScreen({route}){
                 messages={messages}
                 onSend={messages => onSend(messages)}
                 user={{
-                    _id: 1
+                    _id: userID,
+                    name: name
                 }}
             />
             {Platform.OS === 'android' ? <KeyboardAvoidingView behavior='height'/> : null}

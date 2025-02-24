@@ -2,21 +2,33 @@ import { useState } from 'react';
 import {useNavigation } from '@react-navigation/native';
 import { ImageBackground, StyleSheet, Text, View, TextInput,Button,TouchableOpacity } from 'react-native';
 import BackgroundImage from '../assets/BackgroundImage.png'
+
+import { getAuth, signInAnonymously } from 'firebase/auth';
 export default function StartScreen(){
-    
-    const [text, setText] = useState('kody')
+    const auth = getAuth();
+    const [name, setName] = useState('kody')
     const [color, setColor] = useState('blue')
     const navigation = useNavigation();
+    const signInUser = () => {
+        signInAnonymously(auth)
+          .then(result => {
+            navigation.navigate('chat', {userID: result.user.uid, name, color})
+            Alert.alert("Signed in Successfully!");
+          })
+          .catch((error) => {
+            Alert.alert("Unable to sign in, try later again.");
+        })
+    }
     return (
         <View style={styles.container}>
             <ImageBackground source={BackgroundImage} resizeMode="cover" style={styles.image}>
                 <TextInput
                     style={styles.textInput}
-                    value={text}
-                    onChangeText={setText}
+                    value={name}
+                    onChangeText={setName}
                     placeholder='Type Something Here'
                 />
-                <Text>You wrote: {text}</Text>
+                <Text>You wrote: {name}</Text>
                 <TouchableOpacity style={styles.circleButton} onPress={() => setColor('blue')}>
                     <Text>Blue</Text>
                 </TouchableOpacity>
@@ -29,7 +41,7 @@ export default function StartScreen(){
                 <TouchableOpacity style={styles.circleButton} onPress={() => setColor('teal')}>
                     <Text>Teal</Text>
                 </TouchableOpacity>
-                <Button onPress={() => navigation.navigate('Chat', {text, color})} title='Go to Chat'>
+                <Button onPress={signInUser} title='Go to Chat'>
                     
                 </Button>
             </ImageBackground>
