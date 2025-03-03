@@ -93,9 +93,30 @@ export default function ChatScreen({route, db, isConnected}){
         }
         return null;
     }
+
+    const pickImage = async () => {
+            let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
+            if (permissions?.granted) {
+               let result = await ImagePicker.launchImageLibraryAsync();
+        
+              if (!result.canceled) setImage(result.assets[0]);
+              else setImage(null)
+            }
+        }
+    const takePhoto = async () => {
+        let permissions = await ImagePicker.requestCameraPermissionsAsync();
+    
+        if (permissions?.granted) {
+            let result = await ImagePicker.launchCameraAsync();
+    
+          if (!result.canceled) setImage(result.assets[0]);
+          else setImage(null)
+        }
+    }
     return (
         <View style={[styles.container, {backgroundColor: color}]}>
-            {/* <Button
+            <Button
                 title= "Pick an image from the library"
                 onPress={pickImage}
             />
@@ -105,7 +126,7 @@ export default function ChatScreen({route, db, isConnected}){
             />
             {image &&
             <Image source={{ uri: image.uri }} style={{ width: 200, height: 200 }} />
-            } */}
+            }
             
             <GiftedChat
                 messages={messages}
